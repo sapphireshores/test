@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RCB Blow-to-Extinguish Cake</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0b0f1a;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+    }
+    .container {
+      text-align: center;
+    }
+    #cake-img {
+      width: 400px;
+      transition: 0.3s ease;
+    }
+    .btn {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 18px;
+      border-radius: 10px;
+      background: #111;
+      border: 2px solid #00bfff;
+      color: white;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #00bfff;
+      color: #000;
+    }
+    #status {
+      margin-top: 15px;
+      font-size: 20px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BLOW TO EXTINGUISH!</h1>
+    <img id="cake-img" src="lit.png" alt="Cake" />
+
+    <div>
+      <button class="btn" onclick="startMic()">Start Mic</button>
+      <button class="btn" onclick="relight()">Relight</button>
+    </div>
+
+    <div id="status">Listening...</div>
+  </div>
+
+  <script>
+    let audioCtx;
+    let analyser;
+
+    async function startMic() {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+
+      source.connect(analyser);
+      detectBlow();
+    }
+
+    function detectBlow() {
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      function check() {
+        analyser.getByteFrequencyData(dataArray);
+        let volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+        if (volume > 40) {
+          document.getElementById("cake-img").src = "out.png";
+          document.getElementById("status").innerText = "Candles Out!";
+        }
+        requestAnimationFrame(check);
+      }
+      check();
+    }
+
+    function relight() {
+      document.getElementById("cake-img").src = "lit.png";
+      document.getElementById("status").innerText = "Listening...";
+    }
+  </script>
+</body>
+</html>
